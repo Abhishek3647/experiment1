@@ -1,0 +1,89 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Playlist - Carbonyl Compound</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      plugins: [
+        function ({ addComponents }) {
+          addComponents(require("daisyui"));
+        },
+      ],
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.css" />
+  <script src="https://cdn.jsdelivr.net/npm/plyr@3.7.8/dist/plyr.polyfilled.js"></script>
+</head>
+<body class="bg-gray-100 p-4">
+  <div class="container mx-auto">
+    <h1 class="text-3xl font-bold mb-4">Carbonyl Compound Lectures</h1>
+    <div id="video-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+  </div>  <template id="video-card-template">
+    <div class="card bg-white shadow-xl">
+      <figure><img class="h-48 w-full object-cover" src="" alt="Thumbnail" /></figure>
+      <div class="card-body">
+        <h2 class="card-title"></h2>
+        <div class="card-actions justify-end">
+          <button class="btn btn-primary play-btn">Play</button>
+        </div>
+      </div>
+    </div>
+  </template>  <div class="modal modal-bottom sm:modal-middle" id="video-modal">
+    <div class="modal-box w-full max-w-4xl">
+      <div class="aspect-w-16 aspect-h-9">
+        <iframe id="video-frame" class="w-full h-96" allowfullscreen></iframe>
+      </div>
+      <div class="modal-action">
+        <button class="btn" onclick="closeModal()">Close</button>
+      </div>
+    </div>
+  </div>  <script>
+    const container = document.getElementById('video-container');
+    const template = document.getElementById('video-card-template');
+    const iframe = document.getElementById('video-frame');
+    const modal = document.getElementById('video-modal');
+
+    function openModal(url, type) {
+      if (type === 'youtube') {
+        iframe.src = `https://www.youtube.com/embed/${getYouTubeID(url)}?autoplay=1`;
+      } else {
+        iframe.src = `https://cdn.plyr.io/static/blank.mp4`;
+        const player = new Plyr(iframe, {
+          autoplay: true,
+          sources: [
+            {
+              src: url,
+              type: 'video/mp4',
+            },
+          ],
+        });
+      }
+      modal.classList.add('modal-open');
+    }
+
+    function closeModal() {
+      iframe.src = '';
+      modal.classList.remove('modal-open');
+    }
+
+    function getYouTubeID(url) {
+      const regex = /[?&]v=([^&#]*)|youtu\.be\/([^&#]*)/;
+      const match = url.match(regex);
+      return match ? match[1] || match[2] : null;
+    }
+
+    fetch('./data.json')
+      .then(res => res.json())
+      .then(data => {
+        data.forEach(video => {
+          const card = template.content.cloneNode(true);
+          card.querySelector('img').src = video.thumbnail;
+          card.querySelector('.card-title').textContent = video.title;
+          card.querySelector('.play-btn').addEventListener('click', () => openModal(video.videourl, video.videotype));
+          container.appendChild(card);
+        });
+      });
+  </script></body>
+</html>
